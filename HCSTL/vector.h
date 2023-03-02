@@ -31,6 +31,7 @@ protected:
                 //我这里就是用的字面意思，需要用到拷贝构造器我就用has_trivial_copy_constructor，其余同
                 temp[i] = start[i];
             } else {
+                //在指定空间上构造对象
                 new(temp + i)T(start[i]);
             }
         }
@@ -40,8 +41,10 @@ protected:
         if(hc_type_bool<typename _type_traits<T>::is_POD_type>::value){
             //如果只是POD类型，这个操作就是销毁数组空间
             //如果T是复杂类型，那么start指向的内存空间既是数组空间，也是数组第一个元素的空间（数组第一个元素的构造也是用到了new）
-            //众所周知，delete是用来销毁new所创建的内存空间的
-            //但是T是复杂类型这种情况，程序已经分不清你delete start要销毁的是整个数组空间还是数组第一个元素的空间，所以暂时只能浪费掉了
+            //delete的作用是，析构指针所指向的对象，销毁指针所指向的空间
+            //在我们现在的程序中，T是复杂类型这种情况，编译器已经分不清你delete start要销毁的是整个数组空间还是数组第一个元素的空间
+            //所以，不是POD类型，只能暂时浪费掉，无法销毁
+            //在C++的规定中，凡是使用了placement new关键字（也就是new(空间)T()）在指定空间上构造对象的，不得使用普通delete销毁空间
             delete(start);
         }
 
