@@ -14,39 +14,41 @@
 //这就是STL当中类型萃取（type_traits）的意义，萃取各种类型的特点，这里提到的是否需要构造和销毁，就是很重要的类型特点。
 
 #include "type_traits.h"
-#include<iostream>
+#include "allocator.h"
+#include "constructor.h"
 
-template<typename T>
+template<typename T, typename Alloc = allocator<T>>         //缺省默认空间配置器为allocator
 class vector {
 protected:
     T* start;             //表示当前使用空间的头
     T* finish;            //表示当前使用空间的尾
     T* end_of_storage;    //表示当前可用空间的尾
 
+    typedef allocator<T> data_allocator;
+
     void allocate_and_copy(int newcapacity) {        //这个函数的主要作用就是扩容，newcapacity 应当大于 size()
         //可用空间为0，则需要重新申请更大可用空间，并把元素都复制过去
-        T* temp = new T[newcapacity];
+        T* temp = data_allocator::allocate(newcapacity);
         for(int i = 0; i < size(); i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 //我这里就是用的字面意思，需要用到拷贝构造器我就用has_trivial_copy_constructor，其余同
                 temp[i] = start[i];
             } else {
                 //在指定空间上构造对象
-                new(temp + i)T(start[i]);
+                construct(temp + i, start[i]);
             }
         }
         end_of_storage = temp + (size() * 2);
         finish = temp + size();
 
-        if(hc_type_bool<typename _type_traits<T>::is_POD_type>::value){
-            //如果只是POD类型，这个操作就是销毁数组空间
-            //如果T是复杂类型，那么start指向的内存空间既是数组空间，也是数组第一个元素的空间（数组第一个元素的构造也是用到了new）
-            //delete的作用是，析构指针所指向的对象，销毁指针所指向的空间
-            //在我们现在的程序中，T是复杂类型这种情况，编译器已经分不清你delete start要销毁的是整个数组空间还是数组第一个元素的空间
-            //所以，不是POD类型，只能暂时浪费掉，无法销毁
-            //在C++的规定中，凡是使用了placement new关键字（也就是new(空间)T()）在指定空间上构造对象的，不得使用普通delete销毁空间
-            delete(start);
+        if(!hc_type_bool<typename _type_traits<T>::is_POD_type>::value){
+            //POD类型直接回收空间，如果是复杂数据类型，就先逐个析构完毕，然后再回收空间
+            for(int i = 0; i < size(); i++){
+                destroy(start + i);
+            }
         }
+        //通过空间配置器回收空间
+        data_allocator::deallocate(start);
 
         start = temp;
     }
@@ -80,27 +82,27 @@ public:
     vector() : start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
 
     vector(int n) {
-        start = new T[n];
+        start = data_allocator::allocate(n);
         finish = start;
         end_of_storage = start + n;
         for(int i = 0; i < n; i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 start[i] = 0;
             }else{
-                new(start+i)T();
+                construct(start + i);
             }
         }
     }
 
     vector(int n, const T& value) {
-        start = new T[n];
+        start = data_allocator::allocate(n);
         finish = start + n;
         end_of_storage = finish;
         for(int i = 0; i < n; i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 start[i] = value;
             }else{
-                new(start+i)T(value);
+                construct(start + i, value);
             }
         }
     }
@@ -126,7 +128,7 @@ public:
             *finish = x;    //在新的finish位置上插入元素
         } else {
             //在新的finish位置上构造新元素
-            new(finish)T(x);
+            construct(finish, x);
         }
 
         ++finish;       //finish自增，指针移动
@@ -136,7 +138,7 @@ public:
         //尾端元素删除，指针移动即可
         if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
             //如果需要析构就必须析构
-            finish->~T();
+            destroy(finish);
         }
         --finish;
     }
@@ -148,8 +150,8 @@ public:
                 *i = *(i + 1);
             } else {
                 //需要先析构，再构造
-                i->~T();
-                new(i)T(*(i + 1));
+                destroy(i);
+                construct(i, *(i + 1));
             }
 
         }
@@ -165,15 +167,15 @@ public:
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 *(a + count) = *(a + count + diff);
             } else {
-                (a + count)->~T();
-                new(a + count)T(*(a + count + diff));
-                (a + count + diff)->~T();
+                destroy(a + count);
+                construct(a + count, *(a + count + diff));
+                destroy(a + count + diff);
             }
         }
         if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
             //需要析构a + count到b这一段
             for(T* i = a + count; i != b; i++) {
-                i->~T();
+                destroy(i);
             }
         }
         finish = finish - diff;   //指针向前移动
@@ -195,7 +197,7 @@ public:
                 if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                     *(finish + i) = x;
                 } else {
-                    new(finish + i)T(x);
+                    construct(finish + i, x);
                 }
             }
             //移动指针
