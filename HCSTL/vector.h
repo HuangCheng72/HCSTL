@@ -19,17 +19,19 @@
 
 template<typename T, typename Alloc = allocator<T>>         //缺省默认空间配置器为allocator
 class vector {
+public:
+    //嵌套类型定义
+    typedef size_t size_type;   //原因是为了配合空间配置器的管理能力，因此对应的要修改size()，capacity()等的返回类型，以及实现中的size_type
 protected:
     T* start;             //表示当前使用空间的头
     T* finish;            //表示当前使用空间的尾
     T* end_of_storage;    //表示当前可用空间的尾
+    typedef Alloc data_allocator;   //表示空间配置器
 
-    typedef allocator<T> data_allocator;
-
-    void allocate_and_copy(int newcapacity) {        //这个函数的主要作用就是扩容，newcapacity 应当大于 size()
+    void allocate_and_copy(size_type newcapacity) {        //这个函数的主要作用就是扩容，newcapacity 应当大于 size()
         //可用空间为0，则需要重新申请更大可用空间，并把元素都复制过去
         T* temp = data_allocator::allocate(newcapacity);
-        for(int i = 0; i < size(); i++){
+        for(size_type i = 0; i < size(); i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 //我这里就是用的字面意思，需要用到拷贝构造器我就用has_trivial_copy_constructor，其余同
                 temp[i] = start[i];
@@ -43,7 +45,7 @@ protected:
 
         if(!hc_type_bool<typename _type_traits<T>::is_POD_type>::value){
             //POD类型直接回收空间，如果是复杂数据类型，就先逐个析构完毕，然后再回收空间
-            for(int i = 0; i < size(); i++){
+            for(size_type i = 0; i < size(); i++){
                 destroy(start + i);
             }
         }
@@ -63,29 +65,29 @@ public:
     }
 
     //加上const是说明这个函数不能改变任何成员属性和函数
-    int size() const {
-        return int(finish - start);
+    size_type size() const {
+        return size_type(finish - start);
     }
 
-    int capacity() const {
-        return int(end_of_storage - start);
+    size_type capacity() const {
+        return size_type(end_of_storage - start);
     }
 
     bool empty() const {
         return begin() == end();
     }
 
-    T& operator[](int n) {
+    T& operator[](size_type n) {
         return *(begin() + n);
     }
 
     vector() : start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
 
-    vector(int n) {
+    vector(size_type n) {
         start = data_allocator::allocate(n);
         finish = start;
         end_of_storage = start + n;
-        for(int i = 0; i < n; i++){
+        for(size_type i = 0; i < n; i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 start[i] = 0;
             }else{
@@ -94,11 +96,11 @@ public:
         }
     }
 
-    vector(int n, const T& value) {
+    vector(size_type n, const T& value) {
         start = data_allocator::allocate(n);
         finish = start + n;
         end_of_storage = finish;
-        for(int i = 0; i < n; i++){
+        for(size_type i = 0; i < n; i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 start[i] = value;
             }else{
@@ -161,8 +163,8 @@ public:
 
     T* erase(T* a, T* b) {     //消除两个指针之间的元素，注意：a为起点，b为终点
         //将后面元素往前移动即可，把b到finish这一段，复制到a开始的空间这里
-        int diff = int(b - a);
-        int count = 0; //计数器
+        size_type diff = size_type(b - a);
+        size_type count = 0; //计数器
         for(T* i = b; i != finish; i++, count++) {
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 *(a + count) = *(a + count + diff);
@@ -182,7 +184,7 @@ public:
         return a;
     }
 
-    void resize(int new_size, const T& x) {
+    void resize(size_type new_size, const T& x) {
         if(new_size < size()){
             //小于直接删除就行了
             erase(begin() + new_size, end());
@@ -193,7 +195,7 @@ public:
                 allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
             }
             //填充参数
-            for(int i = 0; i < new_size - size(); i++) {
+            for(size_type i = 0; i < new_size - size(); i++) {
                 if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                     *(finish + i) = x;
                 } else {
@@ -205,7 +207,7 @@ public:
         }
     }
 
-    void resize(int new_size) {
+    void resize(size_type new_size) {
         resize(new_size, 0);
     }
 

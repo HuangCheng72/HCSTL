@@ -15,13 +15,16 @@
 #include <new>
 #include <iostream>
 
+//修改size的类型为size_t，能够管理（目前只有分配和回收）更大的内存，int类型相对来说太小了。
+
+
 template<typename T>
-T* allocate(int size, T*) {         //这么定参数列表的原因，size自然是指定大小，给T*作为参数，是为了预防需要void*这种类型的出现
+T* allocate(size_t size, T*) {         //这么定参数列表的原因，size自然是指定大小，给T*作为参数，是为了预防需要void*这种类型的出现
     std::set_new_handler(nullptr);  //这个命令的意思本来是，设置当申请失败时的处理函数，这里设置为nullptr就是让直接抛异常
     //::operator new，全局new，是对C语言malloc的封装，用法一样，返回的也是void*
     //::operator delete，全局delete，是对C语言free的封装，用法一样
     //在前面加上::，又不加上命名空间，说明作用域是全局
-    T* temp = (T*)(::operator new( int(size * sizeof(T)) ));
+    T* temp = (T*)(::operator new( size_t(size * sizeof(T)) ));
     if(temp == 0){
         //申请失败的时候直接报错
         std::cerr<<"Failed to allocate memory."<<std::endl;
@@ -39,7 +42,10 @@ void deallocate(T* buffer){
 template<typename T>
 class allocator{
 public:
-    static T* allocate(int n) {
+
+    typedef size_t size_type;
+
+    static T* allocate(size_type n) {
         //在前面加上::，又不加上命名空间，说明作用域是全局
         //删了::就调用不了前面的allocate了
         return ::allocate(n, (T*)0);
