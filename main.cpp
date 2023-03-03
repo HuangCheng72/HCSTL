@@ -18,6 +18,9 @@ public:
 };
 
 int main() {
+
+
+
     //以下是测试内容和应有结果
 
     /*
@@ -44,12 +47,21 @@ int main() {
     std::cout << m_list.size() << std::endl;                               //0
     */
 
-    vector<double>& vec = *(new vector<double>(4));
+    vector<myclass>& vec = *(new vector<myclass>(4));
     for(int i = 1; i < 10; i++){
-        vec.push_back((double)i / 100);
+        myclass& temp = *(new myclass(i*100));
+        vec.push_back(temp);
     }
 
-    vec.for_each(vec.begin() + 2, vec.end() - 3);               //应当输出0.03到0.06
+    struct Func{
+        void operator() (myclass& m){
+            std::cout << m.getter() << std::endl;
+        }
+    };
+
+    Func& f = *(new Func());
+
+    vec.for_each(vec.begin() + 2, vec.end() - 3, f);               //应当输出300到600
 
     return 0;
 }

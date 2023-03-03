@@ -215,11 +215,38 @@ public:
         erase(begin(), end());
     }
 
-    //实现一个简单的功能（算法），只考虑内置属性时，for_each(first, last)，输出[first, last)内全部的元素
+    //如果用于复杂类型，该怎么输出？对方一定有getter吗？
+    //如果不是输出，而是做别的操作？
+    //因此，应当增加参数，用户提供一个行为给for_each，for_each帮助用户对vector中[first, last)的元素都执行这样的行为。
+    //解决方法：
+    //1.函数指针（C语言的解决方法）。
+    //2.利用C++可以重载操作符的特点，重载()运算符，使得对象可以使用()运算，看起来就像一个函数一样，这就叫函数对象（仿函数）。
+    //函数对象相比较于函数指针最大的优点，就是它比函数指针灵活。函数对象首先是一个对象（它只是看起来像个函数）所以初始化的时候可以有不同的状态（数据）。
+    //函数对象可以做到输入同样的参数，得到不同的结果，而函数指针就很死，函数是设定好的，输入同样的参数一定有同样的结果。
+    //举一个例子，这是一个函数对象：
+    //    struct Func{
+    //        bool a;
+    //        Func(bool b){
+    //            a = b;
+    //        }
+    //        int operator() (int c){
+    //            return c + (a? 1 : 0);
+    //        }
+    //    };
+    //
+    //    Func& f1 = *(new Func(true));
+    //    Func& f2 = *(new Func(false));
+    //
+    //    std::cout << f1(5) << std::endl;    //输出6
+    //    std::cout << f2(5) << std::endl;    //输出5
 
-    void for_each(T* first, T* last) {
+    //因此我们在参数上选用函数对象，让用户提供一个函数对象来对元素执行行为
+
+
+    template<typename Function>
+    void for_each(T* first, T* last, Function f) {
         for(T* temp = first; temp != last; temp++) {
-            std::cout << *temp << std::endl;
+            f(*temp);
         }
     }
 
