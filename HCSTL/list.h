@@ -213,6 +213,14 @@ public:
         node->prev = node;
     }
 
+    //不可能对每个容器都实现一个for_each，需要将for_each分离出来，作为一种算法，应用到任何能使用的容器中。
+    template<typename Function>
+    void for_each(link_type first, link_type last, Function f) {
+        for(link_type temp = first; temp != last; temp = temp->next) {
+            f(temp->value);
+        }
+    }
+
 };
 
 #endif //HCSTL_LIST_H

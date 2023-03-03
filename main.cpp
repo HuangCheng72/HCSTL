@@ -21,10 +21,10 @@ int main() {
 
     //以下是测试内容和应有结果
 
-    vector<myclass>& vec = *(new vector<myclass>(4));
+    list<myclass>& l = *(new list<myclass>());
     for(int i = 1; i < 10; i++){
         myclass& temp = *(new myclass(i*100));
-        vec.push_back(temp);
+        l.push_back(temp);
     }
 
     struct Func{
@@ -35,7 +35,7 @@ int main() {
 
     Func& f = *(new Func());
 
-    vec.for_each(vec.begin() + 2, vec.end() - 3, f);               //应当输出300到600
+    l.for_each(l.begin(), l.end(), f);               //应当输出100到900
 
     return 0;
 }
