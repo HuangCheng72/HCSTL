@@ -34,6 +34,8 @@ protected:
             //是POD类型无需构造，直接填充数据0
             res->value = 0;
         } else {
+            //含有non-POD类型的结构体，也是non-POD类型，应当调用默认构造器构造
+            construct(res);
             //non-POD类型需要调用默认构造器
             construct(&(res->value));
         }
@@ -45,6 +47,8 @@ protected:
             //是POD类型无需构造，直接填充数据
             res->value = value;
         } else {
+            //含有non-POD类型的结构体，也是non-POD类型，应当调用默认构造器构造
+            construct(res);
             //non-POD类型需要调用拷贝构造器
             construct(&(res->value),value);
         }
