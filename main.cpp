@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "list.h"
+#include "vector.h"
 
 //用非POD类型来测试
 class myclass{
@@ -19,6 +20,7 @@ public:
 int main() {
     //以下是测试内容和应有结果
 
+    /*
     list<myclass>& m_list = *(new list<myclass>());
 
     for(int i = 1; i < 10; i++){
@@ -40,7 +42,14 @@ int main() {
 
     m_list.erase(m_list.begin(),m_list.end());
     std::cout << m_list.size() << std::endl;                               //0
+    */
 
+    vector<double>& vec = *(new vector<double>(4));
+    for(int i = 1; i < 10; i++){
+        vec.push_back((double)i / 100);
+    }
+
+    vec.for_each(vec.begin() + 2, vec.end() - 3);               //应当输出0.03到0.06
 
     return 0;
 }

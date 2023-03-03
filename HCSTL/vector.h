@@ -214,6 +214,15 @@ public:
     void clear() {
         erase(begin(), end());
     }
+
+    //实现一个简单的功能（算法），只考虑内置属性时，for_each(first, last)，输出[first, last)内全部的元素
+
+    void for_each(T* first, T* last) {
+        for(T* temp = first; temp != last; temp++) {
+            std::cout << *temp << std::endl;
+        }
+    }
+
 };
 
 #endif //HCSTL_VECTOR_H
