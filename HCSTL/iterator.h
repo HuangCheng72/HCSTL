@@ -77,9 +77,8 @@ typename iterator_traits<Iterator>::iterator_category iterator_category(const It
     return category();//构造一个空结构体传回去，又可以作为参数传入
 }
 
-//通过iterator_traits获取各项信息的函数
 template<typename Iterator>
-typename iterator_traits<Iterator>::value_type* iterator_category(const Iterator&) {
+typename iterator_traits<Iterator>::value_type* value_type(const Iterator&) {
     //获取迭代器指向元素类型
     return (typename iterator_traits<Iterator>::value_type*)0;//传一个该类型的指针，给判断类型用
 }

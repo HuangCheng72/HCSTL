@@ -2,6 +2,7 @@
 
 #include "list.h"
 #include "vector.h"
+#include "algorithm.h"
 
 //用非POD类型来测试
 class myclass{
@@ -35,7 +36,14 @@ int main() {
 
     Func& f = *(new Func());
 
-    l.for_each(l.begin(), l.end(), f);               //应当输出100到900
+    for_each(l.begin(), l.end(), f);               //应当输出100到900
+
+    //直接通过迭代器取元素
+    list<myclass>::iterator it = l.begin();
+    for(int i = 0; i < 5; i++, it++){}
+    //i = 5时退出循环，此时it应当指向myvalue为600的对象
+    auto a = *it;
+    std::cout << a.getter() << std::endl;
 
     return 0;
 }
