@@ -303,7 +303,7 @@ public:
             //temp == last的时候，正好销毁完了temp->prev，也就是last->prev，恰好完成任务
             m_DestroyNode(temp->prev);
         }
-        return last;//此时last在原来a的位置
+        return last;//此时last在原来first的位置
     }
 
     void clear(){

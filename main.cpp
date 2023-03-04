@@ -42,8 +42,10 @@ int main() {
     list<myclass>::iterator it = l.begin();
     for(int i = 0; i < 5; i++, it++){}
     //i = 5时退出循环，此时it应当指向myvalue为600的对象
-    auto a = *it;
-    std::cout << a.getter() << std::endl;
+
+    //这是通过value_type来定数据类型的方法
+    decltype(value_type(it)) a = &(*it);
+    std::cout << a->getter() << std::endl;
 
     return 0;
 }
