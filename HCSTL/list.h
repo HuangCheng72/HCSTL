@@ -298,7 +298,8 @@ public:
         ListNode res = first.cur->prev;
         res->next = last.cur;
         last.cur->prev = res;
-        for(ListNode temp = first->next; temp != last; temp = temp->next){
+        //迭代器是包装了一个ListNode类型的指针cur的结构体，而且没有重载直接与ListNode比较和赋值的操作，所以，必须要拿cur出来比较和赋值。
+        for(ListNode temp = first.cur->next; temp != last.cur; temp = temp->next){
             //销毁结点之后temp->next的值将变化，所以应当先将指针后移，然后销毁prev，这样子就能规避这个问题
             //temp == last的时候，正好销毁完了temp->prev，也就是last->prev，恰好完成任务
             m_DestroyNode(temp->prev);

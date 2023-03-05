@@ -44,15 +44,18 @@ protected:
                 construct(temp + i, start[i]);
             }
         }
-        end_of_storage = temp + (size() * 2);
-        finish = temp + size();
-
+        //调整代码位置
+        //finish被修改前才可以用size()
         if(!hc_type_bool<typename _type_traits<T>::is_POD_type>::value){
             //POD类型直接回收空间，如果是复杂数据类型，就先逐个析构完毕，然后再回收空间
             for(size_type i = 0; i < size(); i++){
                 destroy(start + i);
             }
         }
+
+        end_of_storage = temp + (size() * 2);
+        finish = temp + size();
+
         //通过空间配置器回收空间
         data_allocator::deallocate(start);
 
