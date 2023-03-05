@@ -26,17 +26,17 @@ struct list_iterator : public iterator<bidirectional_iterator_tag, T>{  //继承
     typedef T* pointer;
     typedef T& reference;
     typedef __list_node<T> list_node;
-    typedef list_node* my_node;
+    typedef list_node* ListNode;
     typedef list_iterator<T> self;
 
     //存储当前所处的结点
-    my_node cur;
+    ListNode cur;
 
 
     //构造器
     list_iterator() : cur(nullptr) {}
 
-    list_iterator(const my_node& p) : cur(p) {}
+    list_iterator(const ListNode& p) : cur(p) {}
 
     list_iterator(const list_iterator& li) : cur(li.cur) {}
 
@@ -100,14 +100,14 @@ public:
 protected:
     //这里起别名也是为了代码可读性
     typedef __list_node<T> list_node;
-    typedef list_node* my_node;
+    typedef list_node* ListNode;
 
-    list_node* node;     //只需一个结点即可表示整个环形双向链表
+    ListNode node;     //只需一个结点即可表示整个环形双向链表
 
     typedef allocator<__list_node<T>> data_allocator;   //对结点的空间配置器
 
-    my_node m_CreatNode(){    //创建一个结点，这个结点不带有意义的数据
-        my_node res = data_allocator::allocate(1);
+    ListNode m_CreatNode(){    //创建一个结点，这个结点不带有意义的数据
+        ListNode res = data_allocator::allocate(1);
         if(hc_type_bool<typename _type_traits<T>::has_trivial_default_constructor>::value){
             //是POD类型无需构造，直接填充数据0
             res->value = 0;
@@ -119,8 +119,8 @@ protected:
         }
         return res;
     }
-    my_node m_CreatNode(const T& value){    //创建一个结点，这个结点的数据拷贝自value
-        my_node res = data_allocator::allocate(1);
+    ListNode m_CreatNode(const T& value){    //创建一个结点，这个结点的数据拷贝自value
+        ListNode res = data_allocator::allocate(1);
         if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
             //是POD类型无需构造，直接填充数据
             res->value = value;
@@ -132,7 +132,7 @@ protected:
         }
         return res;
     }
-    void m_DestroyNode(my_node& n){    //销毁一个结点
+    void m_DestroyNode(ListNode& n){    //销毁一个结点
         if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
             //non-POD类型需要调用析构器
             destroy(&(n->value));//析构数据;
@@ -181,7 +181,7 @@ public:
     size_type size() const {
         size_type count = 0;
         //内部实现的话，可以不用迭代器
-        for(my_node temp = node->next; temp != node; temp = temp->next, count++){}
+        for(ListNode temp = node->next; temp != node; temp = temp->next, count++){}
         return count;
     }
 
@@ -192,11 +192,11 @@ public:
         }
         //多余删除，缺少就添加，默认构造
         size_type count = size();
-        my_node _end = node;
+        ListNode _end = node;
         if(n < count){
             //多余要删除
             for(size_type i = n; i > count; --i){
-                my_node temp = _end->prev;
+                ListNode temp = _end->prev;
                 _end->prev = temp->prev;
                 temp->prev->next = _end;//从链表中删除temp这个结点
                 m_DestroyNode(temp);
@@ -204,7 +204,7 @@ public:
         }else{
             //缺少要添加
             for(size_type i = count; i < n; ++i){
-                my_node temp = m_CreatNode();
+                ListNode temp = m_CreatNode();
                 temp->prev = _end->prev;
                 temp->next = _end;
                 temp->prev->next = temp;
@@ -220,11 +220,11 @@ public:
         }
         //多余删除，缺少添加，拷贝构造
         size_type count = size();
-        my_node _end = node;
+        ListNode _end = node;
         if(n < count){
             //多余要删除
             for(size_type i = n; i > count; --i){
-                my_node temp = _end->prev;
+                ListNode temp = _end->prev;
                 _end->prev = temp->prev;
                 temp->prev->next = _end;//从链表中删除temp这个结点
                 m_DestroyNode(temp);
@@ -232,7 +232,7 @@ public:
         }else{
             //缺少要添加
             for(size_type i = count; i < n; ++i){
-                my_node temp = m_CreatNode(val);
+                ListNode temp = m_CreatNode(val);
                 temp->prev = _end->prev;
                 temp->next = _end;
                 temp->prev->next = temp;
@@ -255,7 +255,7 @@ public:
 
     void push_back (const T& val) {
         //拷贝构造
-        my_node temp = m_CreatNode(val);
+        ListNode temp = m_CreatNode(val);
         temp->prev = node->prev;
         temp->next = node;
         temp->prev->next = temp;
@@ -264,7 +264,7 @@ public:
 
     void push_front(const T& val) {
         //拷贝构造
-        my_node temp = m_CreatNode(val);
+        ListNode temp = m_CreatNode(val);
         temp->next = node->next;
         temp->next->prev = temp;
         node->next = temp;
@@ -272,21 +272,21 @@ public:
     }
 
     void pop_back(){
-        my_node temp = node->prev;
+        ListNode temp = node->prev;
         node->prev = temp->prev;
         temp->prev->next = node;//从链表中删除temp这个结点
         m_DestroyNode(temp);
     }
 
     void pop_front(){
-        my_node temp = node->next;//要删除temp
+        ListNode temp = node->next;//要删除temp
         node->next = temp->next;
         temp->next->prev = node;
         m_DestroyNode(temp);
     }
 
     iterator erase(iterator position) {
-        my_node temp = position.cur->next;
+        ListNode temp = position.cur->next;
         position.cur->prev->next = position.cur->next;
         position.cur->next->prev = position.cur->prev;//从链表中删除position这个结点
         m_DestroyNode(*(position.cur));
@@ -295,10 +295,10 @@ public:
 
     iterator erase(iterator first, iterator last) {
         //直接把first->prev和last相连接，析构中间的元素
-        my_node res = first.cur->prev;
+        ListNode res = first.cur->prev;
         res->next = last.cur;
         last.cur->prev = res;
-        for(my_node temp = first->next; temp != last; temp = temp->next){
+        for(ListNode temp = first->next; temp != last; temp = temp->next){
             //销毁结点之后temp->next的值将变化，所以应当先将指针后移，然后销毁prev，这样子就能规避这个问题
             //temp == last的时候，正好销毁完了temp->prev，也就是last->prev，恰好完成任务
             m_DestroyNode(temp->prev);
