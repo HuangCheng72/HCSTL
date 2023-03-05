@@ -1,8 +1,7 @@
 #include <iostream>
 
-#include "list.h"
-#include "vector.h"
-#include "algorithm.h"
+#include "queue.h"
+#include "random"
 
 //用非POD类型来测试
 class myclass{
@@ -14,7 +13,9 @@ public:
     myclass(const myclass& m)  {
         this->myvalue = m.getter();
     }
-    ~myclass() {}
+    ~myclass() {
+        myvalue = 0;
+    }
     int getter() const { return myvalue; }
 };
 
@@ -22,30 +23,31 @@ int main() {
 
     //以下是测试内容和应有结果
 
-    vector<myclass>& vec = *(new vector<myclass>(4));
-    for(int i = 1; i < 10; i++){
-        myclass& temp = *(new myclass(i*100));
-        vec.push_back(temp);
+    priority_queue<int>& pq = *(new priority_queue<int>());
+
+    //直接上手堆排序
+
+    srand(1);
+    for(int i = 10; i >= 1; i--){
+        pq.push(rand());
     }
 
-    struct Func{
-        void operator() (myclass& m){
-            std::cout << m.getter() << std::endl;
-        }
-    };
+    while(!pq.empty()){
+        std::cout<< pq.top() << std::endl;
+        pq.pop();
+    }
 
-    Func& f = *(new Func());
-
-    for_each(vec.begin(), vec.end(), f);               //应当输出100到900
-
-    //直接通过迭代器取元素
-    vector<myclass>::iterator it = vec.begin();
-    for(int i = 0; i < 5; i++, it++){}
-    //i = 5时退出循环，此时it应当指向myvalue为600的对象
-
-    //这是通过value_type来定数据类型的方法
-    decltype(value_type(it)) a = &(*it);
-    std::cout << a->getter() << std::endl;
+    //随机数种子固定，输出结果如下：
+    //41
+    //6334
+    //11478
+    //15724
+    //18467
+    //19169
+    //24464
+    //26500
+    //26962
+    //29358
 
     return 0;
 }
