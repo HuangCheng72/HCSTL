@@ -22,10 +22,10 @@ int main() {
 
     //以下是测试内容和应有结果
 
-    list<myclass>& l = *(new list<myclass>());
+    vector<myclass>& vec = *(new vector<myclass>(4));
     for(int i = 1; i < 10; i++){
         myclass& temp = *(new myclass(i*100));
-        l.push_back(temp);
+        vec.push_back(temp);
     }
 
     struct Func{
@@ -36,10 +36,10 @@ int main() {
 
     Func& f = *(new Func());
 
-    for_each(l.begin(), l.end(), f);               //应当输出100到900
+    for_each(vec.begin(), vec.end(), f);               //应当输出100到900
 
     //直接通过迭代器取元素
-    list<myclass>::iterator it = l.begin();
+    vector<myclass>::iterator it = vec.begin();
     for(int i = 0; i < 5; i++, it++){}
     //i = 5时退出循环，此时it应当指向myvalue为600的对象
 

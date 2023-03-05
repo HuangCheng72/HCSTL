@@ -5,32 +5,36 @@
 #ifndef HCSTL_VECTOR_H
 #define HCSTL_VECTOR_H
 
-//引入模板，将vector的可用范围扩大到全部类型。
-//但是这引入了一个问题，POD类型和用户自行建立的复杂数据类型（就是你自己建的类）该怎么处理？
-//POD类型（指C++的内建数据类型，还有原生指针和C风格的结构体）不需要我们手动去构造和销毁，而复杂数据类型需要构造和销毁。
-//因此需要区分POD类型和复杂数据类型，复杂数据类型使用vector的时候，需要涉及到构造和销毁操作。
-//可以模板偏特化所有的POD类型，但是那样代码量太大了，而且不可能以后碰到这种问题全都这样大力出奇迹解决。
-//因此最好的做法就是分离一个单独的类型判断模块，提高代码的复用性。
-//这就是STL当中类型萃取（type_traits）的意义，萃取各种类型的特点，这里提到的是否需要构造和销毁，就是很重要的类型特点。
-
 #include "type_traits.h"
 #include "allocator.h"
 #include "constructor.h"
+#include "iterator.h"
 
-template<typename T, typename Alloc = allocator<T>>         //缺省默认空间配置器为allocator
+template<typename T>
 class vector {
 public:
-    //嵌套类型定义
-    typedef size_t size_type;   //原因是为了配合空间配置器的管理能力，因此对应的要修改size()，capacity()等的返回类型，以及实现中的size_type
+    /*-------嵌套类型别名--------*/
+
+    typedef size_t size_type;
+
+    typedef T value_type;
+    typedef T* pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+
+    typedef pointer iterator;  //vector的iterator用原生指针就可以了，根本不需要封装，直接指定原生指针为vector的iterator
+
+    /*-------嵌套类型别名完--------*/
 protected:
-    T* start;             //表示当前使用空间的头
-    T* finish;            //表示当前使用空间的尾
-    T* end_of_storage;    //表示当前可用空间的尾
-    typedef Alloc data_allocator;   //表示空间配置器
+
+    iterator start;             //表示当前使用空间的头
+    iterator finish;            //表示当前使用空间的尾
+    iterator end_of_storage;    //表示当前可用空间的尾
+    typedef allocator<T> data_allocator;   //表示空间配置器
 
     void allocate_and_copy(size_type newcapacity) {        //这个函数的主要作用就是扩容，newcapacity 应当大于 size()
         //可用空间为0，则需要重新申请更大可用空间，并把元素都复制过去
-        T* temp = data_allocator::allocate(newcapacity);
+        iterator temp = data_allocator::allocate(newcapacity);
         for(size_type i = 0; i < size(); i++){
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 //我这里就是用的字面意思，需要用到拷贝构造器我就用has_trivial_copy_constructor，其余同
@@ -56,30 +60,20 @@ protected:
     }
 
 public:
-    T* begin() const {
+
+    /*-------迭代器相关函数--------*/
+
+    iterator begin() const {
         return start;
     }
 
-    T* end() const {
+    iterator end() const {
         return finish;
     }
 
-    //加上const是说明这个函数不能改变任何成员属性和函数
-    size_type size() const {
-        return size_type(finish - start);
-    }
+    /*-------迭代器相关函数完--------*/
 
-    size_type capacity() const {
-        return size_type(end_of_storage - start);
-    }
-
-    bool empty() const {
-        return begin() == end();
-    }
-
-    T& operator[](size_type n) {
-        return *(begin() + n);
-    }
+    /*-------构造器与析构器相关函数--------*/
 
     vector() : start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
 
@@ -96,7 +90,7 @@ public:
         }
     }
 
-    vector(size_type n, const T& value) {
+    vector(size_type n, const_reference value) {
         start = data_allocator::allocate(n);
         finish = start + n;
         end_of_storage = finish;
@@ -113,15 +107,39 @@ public:
         delete start;
     }
 
-    T& front() {
+    /*-------构造器与析构器相关函数完--------*/
+
+    /*-------容器容量相关函数--------*/
+
+    size_type size() const {
+        return size_type(finish - start);
+    }
+
+    size_type capacity() const {
+        return size_type(end_of_storage - start);
+    }
+
+    bool empty() const {
+        return begin() == end();
+    }
+
+    /*-------容器容量相关函数完--------*/
+
+    /*-------容器数据相关函数--------*/
+
+    reference front() {
         return *begin();
     }
 
-    T& back() {
+    reference back() {
         return *(end() - 1);
     }
 
-    void push_back(const T& x) {
+    reference operator[](size_type n) {
+        return *(begin() + n);
+    }
+
+    void push_back(const_reference x) {
         if(finish == end_of_storage) {
             allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
         }
@@ -145,9 +163,9 @@ public:
         --finish;
     }
 
-    T* erase(T* position) {     //消除某位置上元素
+    iterator erase(iterator position) {     //消除某位置上元素
         //将后面元素往前移动即可
-        for(T* i = position; i != finish; i++) {
+        for(iterator i = position; i != finish; i++) {
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
                 *i = *(i + 1);
             } else {
@@ -161,30 +179,30 @@ public:
         return position;
     }
 
-    T* erase(T* a, T* b) {     //消除两个指针之间的元素，注意：a为起点，b为终点
-        //将后面元素往前移动即可，把b到finish这一段，复制到a开始的空间这里
-        size_type diff = size_type(b - a);
+    iterator erase(iterator first, iterator last) {
+        //将后面元素往前移动即可，把last到finish这一段，复制到first开始的空间这里
+        ptrdiff_t diff = last - first;
         size_type count = 0; //计数器
-        for(T* i = b; i != finish; i++, count++) {
+        for(iterator i = last; i != finish; i++, count++) {
             if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
-                *(a + count) = *(a + count + diff);
+                *(first + count) = *(first + count + diff);
             } else {
-                destroy(a + count);
-                construct(a + count, *(a + count + diff));
-                destroy(a + count + diff);
+                destroy(first + count);
+                construct(first + count, *(first + count + diff));
+                destroy(first + count + diff);
             }
         }
         if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
-            //需要析构a + count到b这一段
-            for(T* i = a + count; i != b; i++) {
+            //需要析构first + count到last这一段
+            for(iterator i = first + count; i != last; i++) {
                 destroy(i);
             }
         }
         finish = finish - diff;   //指针向前移动
-        return a;
+        return first;
     }
 
-    void resize(size_type new_size, const T& x) {
+    void resize(size_type new_size, const_reference x) {
         if(new_size < size()){
             //小于直接删除就行了
             erase(begin() + new_size, end());
@@ -215,40 +233,7 @@ public:
         erase(begin(), end());
     }
 
-    //如果用于复杂类型，该怎么输出？对方一定有getter吗？
-    //如果不是输出，而是做别的操作？
-    //因此，应当增加参数，用户提供一个行为给for_each，for_each帮助用户对vector中[first, last)的元素都执行这样的行为。
-    //解决方法：
-    //1.函数指针（C语言的解决方法）。
-    //2.利用C++可以重载操作符的特点，重载()运算符，使得对象可以使用()运算，看起来就像一个函数一样，这就叫函数对象（仿函数）。
-    //函数对象相比较于函数指针最大的优点，就是它比函数指针灵活。函数对象首先是一个对象（它只是看起来像个函数）所以初始化的时候可以有不同的状态（数据）。
-    //函数对象可以做到输入同样的参数，得到不同的结果，而函数指针就很死，函数是设定好的，输入同样的参数一定有同样的结果。
-    //举一个例子，这是一个函数对象：
-    //    struct Func{
-    //        bool a;
-    //        Func(bool b){
-    //            a = b;
-    //        }
-    //        int operator() (int c){
-    //            return c + (a? 1 : 0);
-    //        }
-    //    };
-    //
-    //    Func& f1 = *(new Func(true));
-    //    Func& f2 = *(new Func(false));
-    //
-    //    std::cout << f1(5) << std::endl;    //输出6
-    //    std::cout << f2(5) << std::endl;    //输出5
-
-    //因此我们在参数上选用函数对象，让用户提供一个函数对象来对元素执行行为
-
-
-    template<typename Function>
-    void for_each(T* first, T* last, Function f) {
-        for(T* temp = first; temp != last; temp++) {
-            f(*temp);
-        }
-    }
+    /*-------容器数据相关函数完--------*/
 
 };
 
