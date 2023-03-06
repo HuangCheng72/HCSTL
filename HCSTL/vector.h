@@ -107,7 +107,8 @@ public:
     }
 
     ~vector() {
-        delete start;
+        clear();
+        data_allocator::deallocate(start);
     }
 
     /*-------构造器与析构器相关函数完--------*/
