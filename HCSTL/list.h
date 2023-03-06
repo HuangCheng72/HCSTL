@@ -93,6 +93,7 @@ public:
     typedef T value_type;
     typedef T* pointer;
     typedef T& reference;
+    typedef const T& const_reference;
 
     typedef list_iterator<T> iterator;  //确定list_iterator是这个容器的迭代器类型
 
@@ -119,7 +120,7 @@ protected:
         }
         return res;
     }
-    ListNode m_CreatNode(const T& value){    //创建一个结点，这个结点的数据拷贝自value
+    ListNode m_CreatNode(const_reference value){    //创建一个结点，这个结点的数据拷贝自value
         ListNode res = data_allocator::allocate(1);
         if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
             //是POD类型无需构造，直接填充数据
@@ -213,7 +214,7 @@ public:
         }
     }
 
-    void resize (size_type n, const T& val){
+    void resize (size_type n, const_reference val){
         if(n == 0){
             //特殊情况
             clear();
@@ -245,15 +246,15 @@ public:
 
     /*-------容器数据相关函数--------*/
 
-    T& front() const{
+    reference front() const{
         return node->next->value;
     }
 
-    T& back() {
+    reference back() {
         return node->prev->value;
     }
 
-    void push_back (const T& val) {
+    void push_back (const_reference val) {
         //拷贝构造
         ListNode temp = m_CreatNode(val);
         temp->prev = node->prev;
@@ -262,7 +263,7 @@ public:
         temp->next->prev = temp;
     }
 
-    void push_front(const T& val) {
+    void push_front(const_reference val) {
         //拷贝构造
         ListNode temp = m_CreatNode(val);
         temp->next = node->next;
