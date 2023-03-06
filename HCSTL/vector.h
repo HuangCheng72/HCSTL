@@ -223,7 +223,26 @@ public:
     }
 
     void resize(size_type new_size) {
-        resize(new_size, 0);
+        if(new_size < size()){
+            //小于直接删除就行了
+            erase(begin() + new_size, end());
+        } else {
+            //这里不考虑等于的情况，只考虑大于，因而在start + size到start + new_size这一段，插入常数x
+            if(new_size > capacity()) {
+                //需要扩容才行
+                allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
+            }
+            //填充参数
+            for(size_type i = 0; i < new_size - size(); i++) {
+                if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+                    *(finish + i) = 0;
+                } else {
+                    construct(finish + i);
+                }
+            }
+            //移动指针
+            finish += new_size - size();
+        }
     }
 
     void clear() {
