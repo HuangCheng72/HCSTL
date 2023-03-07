@@ -40,8 +40,7 @@ private:
     //指针距离计算结果类型
     typedef typename iterator_traits<iterator>::difference_type Distance;
     //比较器
-    typedef Compare comp;
-    comp _comp;
+    value_compare comp;
 
     //建立堆所需要用到的操作工具和算法。
     //回顾我们建立堆的方法，在数组中，i从1起算时，i的孩子结点是i * 2和i * 2 + 1。
@@ -72,7 +71,7 @@ private:
             Distance parent = (index + 1) / 2 - 1;
 
             //如果其不比父节点小，说明位置正确，停止上浮
-            if(!_comp(cont.begin()[index] , cont.begin()[parent])) {
+            if(!comp(cont.begin()[index] , cont.begin()[parent])) {
                 break;
             }
             //交换元素
@@ -93,13 +92,13 @@ private:
             Distance min_child = index * 2 + 1; //左孩子无论如何都存在
             if(index * 2 + 2 < cont.size()) {
                 //还有右孩子就比较右孩子
-                if(_comp(cont.begin()[index * 2 + 2], cont.begin()[min_child] )){
+                if(comp(cont.begin()[index * 2 + 2], cont.begin()[min_child] )){
                     min_child = index * 2 + 2;
                 }
             }
             //求出左右两个哪个孩子更小以后，与最小的孩子比较
 
-            if(!_comp(cont.begin()[min_child], cont.begin()[index])){
+            if(!comp(cont.begin()[min_child], cont.begin()[index])){
                 //如果最小的孩子都不比自身小，说明已经下沉到正确位置
                 break;
             }
@@ -118,7 +117,7 @@ public:
     priority_queue() {
         //vector的默认构造器直接把三个指针全部设置为nullptr，所以应当指定初始大小。
         cont = *(new vector<T>(4));
-        _comp = *(new comp);
+        comp = *(new value_compare());
     }
 
     ~priority_queue() {
