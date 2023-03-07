@@ -16,12 +16,14 @@
 //优先队列并不提供迭代器，它只能访问堆最顶端的值。
 
 #include "vector.h"
+#include "functional.h"
 
-template <typename T>
+//函数无法作为模板参数，但是结构体名可以，所以比较器这个模板参数默认值应当采用函数对象，在之前我们在算法for_each中提供的是函数对象也是一样的道理，所以要将比较函数变成函数对象
+template <typename T, typename Compare = less<T>>
 class priority_queue{
 public:
 
-    typedef vector<T> container_type;
+    typedef Compare value_compare;
 
     //使用底层容器的类型，这是适配器的一个特点，依赖于原组件提供的信息
     typedef typename vector<T>::value_type value_type;
@@ -34,9 +36,12 @@ public:
 private:
 
     //底层容器对象
-    container_type cont;
+    vector<T> cont;
     //指针距离计算结果类型
     typedef typename iterator_traits<iterator>::difference_type Distance;
+    //比较器
+    typedef Compare comp;
+    comp _comp;
 
     //建立堆所需要用到的操作工具和算法。
     //回顾我们建立堆的方法，在数组中，i从1起算时，i的孩子结点是i * 2和i * 2 + 1。
@@ -46,22 +51,17 @@ private:
     //因此我们采用i从0起算的方法。
 
     //交换两个迭代器所指向的元素
-    void swap(Distance a, Distance b) {
+    void swap(iterator a, iterator b) {
         //提供迭代器交换这两个迭代器所对应的元素
-        value_type temp = *(cont.begin() + a);
-        *(cont.begin() + a) = *(cont.begin() + b);
-        *(cont.begin() + b) = temp;
-    }
-
-    //判断a是否小于b
-    bool less(Distance a, Distance b) {
-        return *(cont.begin() + a) < *(cont.begin() + b);
+        value_type temp = *a;
+        *a = *b;
+        *b = temp;
     }
 
     //元素上浮
-    void swim(Distance a) {
+    void swim(iterator it) {
 
-        Distance index = a;
+        Distance index = it - cont.begin();
 
         //若已经到达堆顶，不可能接着上浮
         while(index != 0) {
@@ -72,20 +72,20 @@ private:
             Distance parent = (index + 1) / 2 - 1;
 
             //如果其不比父节点小，说明位置正确，停止上浮
-            if(!less(index , parent)) {
+            if(!_comp(cont.begin()[index] , cont.begin()[parent])) {
                 break;
             }
             //交换元素
-            swap(index, parent);
+            swap(cont.begin() + index, cont.begin() + parent);
             index = parent;
 
         }
     }
 
     //元素下沉
-    void sink(Distance a) {
+    void sink(iterator it) {
 
-        Distance index = a;
+        Distance index = it - cont.begin();
 
         //若已经到达堆底，不可能接着下沉
         while(index * 2 + 1 < cont.size()) {    //至少有一个孩子可以比较的情况才行（也就是最坏情况最多允许左孩子(i *2 + 1)正好到cont.size() - 1，所以最多i * 2 + 2 == cont.size()）
@@ -93,32 +93,37 @@ private:
             Distance min_child = index * 2 + 1; //左孩子无论如何都存在
             if(index * 2 + 2 < cont.size()) {
                 //还有右孩子就比较右孩子
-                if(less(index * 2 + 2, min_child)){
+                if(_comp(cont.begin()[index * 2 + 2], cont.begin()[min_child] )){
                     min_child = index * 2 + 2;
                 }
             }
             //求出左右两个哪个孩子更小以后，与最小的孩子比较
 
-            if(!less(min_child, index)){
+            if(!_comp(cont.begin()[min_child], cont.begin()[index])){
                 //如果最小的孩子都不比自身小，说明已经下沉到正确位置
                 break;
             }
-            swap(min_child, index);
+            swap(cont.begin() + min_child, cont.begin() + index);
             index = min_child;
 
         }
     }
+    /*-------建堆辅助函数完--------*/
 
 public:
+    //注意！Priority_Queue不对外提供迭代器！很多适配器并不对外提供迭代器。
 
     /*-------构造器与析构器相关函数--------*/
 
-    priority_queue(){
-        //如果不构造这个，vector的默认构造器直接把三个指针全部设置为nullptr，出问题就在这里。
-        cont = *(new container_type(4));
+    priority_queue() {
+        //vector的默认构造器直接把三个指针全部设置为nullptr，所以应当指定初始大小。
+        cont = *(new vector<T>(4));
+        _comp = *(new comp);
     }
 
-    ~priority_queue() = default;
+    ~priority_queue() {
+        delete cont;
+    }
 
     /*-------构造器与析构器相关函数完--------*/
 
@@ -142,16 +147,17 @@ public:
 
     void push (const T& val) {
         cont.push_back(val);
-        swim(Distance (cont.size() - 1));
+        //最后一个元素上浮
+        swim(cont.end() - 1);
     }
 
     void pop(){
         //交换堆顶和堆底，然后把堆的范围缩小
-        swap(0, cont.size() - 1);
+        swap(cont.begin(), cont.end() - 1);
         //删除堆底
-        cont.erase(cont.end() - 1);
+        cont.pop_back();
         //堆顶元素下沉
-        sink(0);
+        sink(cont.begin());
     }
 
     void clear(){
