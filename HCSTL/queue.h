@@ -113,7 +113,10 @@ public:
 
     /*-------构造器与析构器相关函数--------*/
 
-    priority_queue() = default;
+    priority_queue(){
+        //如果不构造这个，vector的默认构造器直接把三个指针全部设置为nullptr，出问题就在这里。
+        cont = *(new container_type(4));
+    }
 
     ~priority_queue() = default;
 
