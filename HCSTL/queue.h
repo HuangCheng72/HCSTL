@@ -17,6 +17,7 @@
 
 #include "vector.h"
 #include "functional.h"
+#include "heap.h"
 
 //函数无法作为模板参数，但是结构体名可以，所以比较器这个模板参数默认值应当采用函数对象，在之前我们在算法for_each中提供的是函数对象也是一样的道理，所以要将比较函数变成函数对象
 template <typename T, typename Compare = less<T>>
@@ -146,17 +147,12 @@ public:
 
     void push (const T& val) {
         cont.push_back(val);
-        //最后一个元素上浮
-        swim(cont.end() - 1);
+        push_heap(cont.begin(),cont.end(), comp);
     }
 
     void pop(){
-        //交换堆顶和堆底，然后把堆的范围缩小
-        swap(cont.begin(), cont.end() - 1);
-        //删除堆底
+        pop_heap(cont.begin(),cont.end(), comp);
         cont.pop_back();
-        //堆顶元素下沉
-        sink(cont.begin());
     }
 
     void clear(){

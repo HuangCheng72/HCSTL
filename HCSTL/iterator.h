@@ -71,22 +71,22 @@ struct iterator_traits<const T*>{
 
 //通过iterator_traits获取各项信息的函数（不要直接用struct，信息太多，尽量少暴露信息，算法用函数，不要直接调结构体）
 template<typename Iterator>
-typename iterator_traits<Iterator>::iterator_category iterator_category(const Iterator&) {
+typename iterator_traits<Iterator>::iterator_category __iterator_category(const Iterator&) {
     //获取迭代器类型
     typedef typename iterator_traits<Iterator>::iterator_category category;
     return category();//构造一个空结构体传回去，又可以作为参数传入
 }
 
 template<typename Iterator>
-typename iterator_traits<Iterator>::value_type* value_type(const Iterator&) {
+typename iterator_traits<Iterator>::value_type* __value_type(const Iterator&) {
     //获取迭代器指向元素类型
     return (typename iterator_traits<Iterator>::value_type*)0;//传一个该类型的指针，给判断类型用
 }
 
 template<typename Iterator>
-typename iterator_traits<Iterator>::distance_type* distance_type(const Iterator&) {
+typename iterator_traits<Iterator>::difference_type * __distance_type(const Iterator&) {
     //获取距离类型
-    return (typename iterator_traits<Iterator>::distance_type*)0;//传一个该类型的指针，给判断类型用
+    return (typename iterator_traits<Iterator>::difference_type*)(0);//传一个该类型的指针，给判断类型用
 }
 
 #endif //HCSTL_ITERATOR_H
