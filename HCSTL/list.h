@@ -109,7 +109,7 @@ protected:
 
     ListNode m_CreatNode(){    //创建一个结点，这个结点不带有意义的数据
         ListNode res = data_allocator::allocate(1);
-        if(hc_type_bool<typename _type_traits<T>::has_trivial_default_constructor>::value){
+        if(hc_type_bool<typename type_traits<T>::has_trivial_default_constructor>::value){
             //是POD类型无需构造，直接填充数据0
             res->value = 0;
         } else {
@@ -122,7 +122,7 @@ protected:
     }
     ListNode m_CreatNode(const_reference value){    //创建一个结点，这个结点的数据拷贝自value
         ListNode res = data_allocator::allocate(1);
-        if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+        if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
             //是POD类型无需构造，直接填充数据
             res->value = value;
         } else {
@@ -134,7 +134,7 @@ protected:
         return res;
     }
     void m_DestroyNode(ListNode& n){    //销毁一个结点
-        if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
+        if(!hc_type_bool<typename type_traits<T>::has_trivial_destructor>::value){
             //non-POD类型需要调用析构器
             destroy(&(n->value));//析构数据;
         }

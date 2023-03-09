@@ -36,7 +36,7 @@ protected:
         //可用空间为0，则需要重新申请更大可用空间，并把元素都复制过去
         iterator temp = data_allocator::allocate(newcapacity);
         for(size_type i = 0; i < size(); i++){
-            if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                 //我这里就是用的字面意思，需要用到拷贝构造器我就用has_trivial_copy_constructor，其余同
                 temp[i] = start[i];
             } else {
@@ -78,7 +78,7 @@ public:
         finish = start;
         end_of_storage = start + n;
         for(size_type i = 0; i < n; i++){
-            if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                 start[i] = 0;
             }else{
                 construct(start + i);
@@ -91,7 +91,7 @@ public:
         finish = start + n;
         end_of_storage = finish;
         for(size_type i = 0; i < n; i++){
-            if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                 start[i] = value;
             }else{
                 construct(start + i, value);
@@ -141,7 +141,7 @@ public:
             allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
         }
         //直接添加到末尾即可
-        if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+        if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
             *finish = x;    //在新的finish位置上插入元素
         } else {
             //在新的finish位置上构造新元素
@@ -153,7 +153,7 @@ public:
 
     void pop_back() {
         //尾端元素删除，指针移动即可
-        if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
+        if(!hc_type_bool<typename type_traits<T>::has_trivial_destructor>::value){
             //如果需要析构就必须析构
             destroy(finish);
         }
@@ -163,7 +163,7 @@ public:
     iterator erase(iterator position) {     //消除某位置上元素
         //将后面元素往前移动即可
         for(iterator i = position; i != finish; i++) {
-            if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                 *i = *(i + 1);
             } else {
                 //需要先析构，再构造
@@ -181,7 +181,7 @@ public:
         ptrdiff_t diff = last - first;
         size_type count = 0; //计数器
         for(iterator i = last; i != finish; i++, count++) {
-            if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                 *(first + count) = *(first + count + diff);
             } else {
                 destroy(first + count);
@@ -189,7 +189,7 @@ public:
                 destroy(first + count + diff);
             }
         }
-        if(!hc_type_bool<typename _type_traits<T>::has_trivial_destructor>::value){
+        if(!hc_type_bool<typename type_traits<T>::has_trivial_destructor>::value){
             //需要析构first + count到last这一段
             for(iterator i = first + count; i != last; i++) {
                 destroy(i);
@@ -211,7 +211,7 @@ public:
             }
             //填充参数
             for(size_type i = 0; i < new_size - size(); i++) {
-                if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+                if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                     *(finish + i) = x;
                 } else {
                     construct(finish + i, x);
@@ -234,7 +234,7 @@ public:
             }
             //填充参数
             for(size_type i = 0; i < new_size - size(); i++) {
-                if(hc_type_bool<typename _type_traits<T>::has_trivial_copy_constructor>::value){
+                if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
                     *(finish + i) = 0;
                 } else {
                     construct(finish + i);
