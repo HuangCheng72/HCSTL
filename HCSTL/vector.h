@@ -71,14 +71,14 @@ public:
 
     /*-------构造器与析构器相关函数--------*/
 
-    vector() : start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
+    vector() : vector(16) {} //默认构造器调用带参构造器必须使用委托构造语法，默认初始容量为16
 
     vector(size_type n) {
         start = data_allocator::allocate(n);
         finish = start;
         end_of_storage = start + n;
         for(size_type i = 0; i < n; i++){
-            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_default_constructor>::value){
                 start[i] = 0;
             }else{
                 construct(start + i);

@@ -50,7 +50,7 @@ public:
 
     priority_queue() {
         //vector的默认构造器直接把三个指针全部设置为nullptr，所以应当指定初始大小。
-        cont = *(new vector<T>(4));
+        cont = *(new vector<T>());
         comp = *(new value_compare());
     }
 
