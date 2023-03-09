@@ -208,7 +208,7 @@ void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance botto
         //找出最大的孩子结点，因为左孩子无论如何都存在，所以默认为左孩子
         max_child = targetIndex * 2 + 1;
         //如果有右孩子就要比较右孩子
-        if(targetIndex * 2 + 2 < bottomIndex && *(first + max_child) < *(first + targetIndex * 2 + 2) ) {
+        if(targetIndex * 2 + 2 < bottomIndex && comp(*(first + max_child) , *(first + targetIndex * 2 + 2)) ) {
             max_child = targetIndex * 2 + 2;
         }
 
@@ -243,6 +243,78 @@ void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Dista
 template <typename RandomAccessIterator, typename Compare>
 void pop_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
     h_pop_heap_aux(first, last, distance_type(first), value_type(first), comp);
+}
+
+/**
+ * 在一个已经是heap的容器上以 < 运算符比较，完成堆排序（升序）
+ * @tparam RandomAccessIterator 对任何随机访问迭代器适用
+ * @param first 容器头
+ * @param last 容器尾
+ */
+template <typename RandomAccessIterator>
+void sort_heap(RandomAccessIterator first, RandomAccessIterator last){
+    //在一个已经是heap的数组上完成堆排序
+    //需要保证传入的迭代器first到last之间一定是heap结构
+    //这样堆排序就很简单了，不断地pop_heap就可以完成升序排序了。
+    while(last - first > 1) {
+        pop_heap(first, last--);
+    }
+}
+
+/**
+ * 在一个已经是heap的容器上以给定比较器比较，完成堆排序（升序）
+ * @tparam RandomAccessIterator 对任何随机访问迭代器适用
+ * @tparam Compare 比较器类型
+ * @param first 容器头
+ * @param last 容器尾
+ * @param comp 比较器
+ */
+template <typename RandomAccessIterator, typename Compare>
+void sort_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+    //在一个已经是heap的数组上完成堆排序
+    //需要保证传入的迭代器first到last之间一定是heap结构
+    //这样堆排序就很简单了，不断地pop_heap就可以完成升序排序了。
+    while(last - first > 1) {
+        pop_heap(first, last--, comp);
+    }
+}
+
+/**
+ * 将一个容器first到last部分的数据变成堆结构，以 < 运算符比较
+ * @tparam RandomAccessIterator 对任何随机访问迭代器适用
+ * @param first 容器头
+ * @param last 容器尾
+ */
+template <typename RandomAccessIterator>
+void make_heap(RandomAccessIterator first, RandomAccessIterator last){
+    //将一个容器first到last部分变成堆结构
+    //直接不断地入堆就行了
+
+    //为什么temp从first+2开始？
+    //从first + 1开始的时候就一个元素，根本不用排序。
+    for(RandomAccessIterator temp = first + 2; temp != last; temp++) {
+        push_heap(first, temp);
+    }
+}
+
+/**
+ * 将一个容器first到last部分的数据变成堆结构，以给定比较器比较
+ * @tparam RandomAccessIterator 对任何随机访问迭代器适用
+ * @tparam Compare 比较器类型
+ * @param first 容器头
+ * @param last 容器尾
+ * @param comp 比较器
+ */
+template <typename RandomAccessIterator, typename Compare>
+void make_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+    //将一个数组变成堆结构
+    //直接不断地入堆就行了
+
+    //为什么temp从first+2开始？
+    //从first + 1开始的时候就一个元素，根本不用排序。
+    for(RandomAccessIterator temp = first + 2; temp != last; temp++) {
+        push_heap(first, temp, comp);
+    }
 }
 
 #endif //HCSTL_HEAP_H

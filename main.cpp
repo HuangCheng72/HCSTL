@@ -1,7 +1,9 @@
 #include <iostream>
 
-#include "queue.h"
+
 #include "random"
+#include "heap.h"
+#include "algorithm.h"
 
 //用非POD类型来测试
 class myclass{
@@ -23,31 +25,31 @@ int main() {
 
     //以下是测试内容和应有结果
 
-    priority_queue<int>& pq = *(new priority_queue<int>());
-
-    //直接上手堆排序
+    myclass array[10];
 
     srand(1);
-    for(int i = 10; i >= 1; i--){
-        pq.push(rand());
+    for(int i = 0; i < 10; i++){
+        array[i] = *(new myclass(rand()));
     }
 
-    while(!pq.empty()){
-        std::cout<< pq.top() << std::endl;
-        pq.pop();
-    }
+    struct Comp {
+        bool operator() (myclass& m1, myclass& m2){
+            return m1.getter() < m2.getter();
+        }
+    };
+    Comp& comp = *(new Comp());
+    make_heap(array, array + 10, comp);
+    sort_heap(array, array + 10, comp);
 
-    //随机数种子固定，输出结果如下：
-    //41
-    //6334
-    //11478
-    //15724
-    //18467
-    //19169
-    //24464
-    //26500
-    //26962
-    //29358
+    struct Func {
+        void operator() (myclass& m1){
+            std::cout<< m1.getter() << std::endl;
+        }
+    };
+
+    Func& func = *(new Func);
+
+    for_each(array, array + 10, func);
 
     return 0;
 }
