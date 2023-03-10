@@ -31,14 +31,12 @@
 //现在都有命名空间了，用namespace hcstl一包起来，根本不怕重名问题。
 
 #include "iterator.h"
+#include "util.h"
 
-
-template <typename RandomAccessIterator, typename Distance, typename T>
-void h_push_heap(RandomAccessIterator first, Distance topIndex, Distance targetIndex, T value) {
-    //四项参数分别是，容器开头迭代器，堆顶元素所在下标，目标元素所在下标，要插入的元素（比较的要素齐全，不需要创建一个变量临时存储了，节约内存提高效率）
-    //实现元素上浮，这是一个更高效的上浮法，有点像下沉。
-    //它的做法是一路往上比较，如果发现parent位置元素比value小，就把parent扔到child位置。
-    //最终停下来的时候，child位置就是value位置。
+template <typename RandomAccessIterator, typename Distance>
+void h_push_heap(RandomAccessIterator first, Distance topIndex, Distance targetIndex) {
+    //三项参数分别是，容器开头迭代器，堆顶元素所在下标，目标元素所在下标
+    //实现元素上浮，一路交换
 
     Distance parent = (targetIndex - 1) / 2;
     //若已经到达堆顶，不可能接着上浮
@@ -48,26 +46,22 @@ void h_push_heap(RandomAccessIterator first, Distance topIndex, Distance targetI
         //反推得i的父节点为 (i + 1) / 2 - 1，其实用（i - 1） / 2就行了，结果是一样的
 
         //STL 默认的是最大堆，所以这里应该是发现如果其比父节点小，说明位置正确，停止上浮
-        if( value < *(first + parent)  ) {
+        if( *(first + targetIndex) < *(first + parent)  ) {
             break;
         }
-        //把元素往下扔
-        *(first + targetIndex) = *(first + parent);
+        //把元素往上交换
+        swap( *(first + targetIndex) , *(first + parent) );
         //更新下标
         targetIndex = parent;
         parent = (targetIndex - 1) / 2;
     }
-
-    //这里就是value的位置
-    *(first + targetIndex) = value;
-
 }
 
 
-template <typename RandomAccessIterator, typename Distance, typename T>
-void h_push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, T*) {
-    //传入Distance*和T*的指针是为了模板参数的完成自动推导
-    h_push_heap(first, Distance(0) , Distance((last - first) - 1) , T(*(last - 1)));
+template <typename RandomAccessIterator, typename Distance>
+void h_push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*) {
+    //传入Distance*的指针是为了模板参数的完成自动推导
+    h_push_heap(first, Distance(0) , Distance((last - first) - 1));
 }
 
 
@@ -84,10 +78,9 @@ void push_heap(RandomAccessIterator first, RandomAccessIterator last) {
 
 
 
-
-template <typename RandomAccessIterator, typename Distance, typename T, typename Compare>
-void h_push_heap(RandomAccessIterator first, Distance topIndex, Distance targetIndex, T value, Compare comp) {
-    //四项参数分别是，容器开头迭代器，堆顶元素所在下标，目标元素所在下标，要插入的元素（比较的要素齐全，不需要创建一个变量临时存储了，节约内存提高效率）
+template <typename RandomAccessIterator, typename Distance, typename Compare>
+void h_push_heap(RandomAccessIterator first, Distance topIndex, Distance targetIndex, Compare& comp) {
+    //四项参数分别是，容器开头迭代器，堆顶元素所在下标，目标元素所在下标，比较器
     //实现元素上浮
 
     Distance parent = (targetIndex - 1) / 2;
@@ -98,24 +91,21 @@ void h_push_heap(RandomAccessIterator first, Distance topIndex, Distance targetI
         //反推得i的父节点为 (i + 1) / 2 - 1，其实用（i - 1） / 2就行了，结果是一样的
 
         //STL 默认的是最大堆，所以这里应该是发现如果其比父节点小，说明位置正确，停止上浮
-        if( comp(value, *(first + parent)) ) {
+        if( comp(*(first + targetIndex), *(first + parent)) ) {
             break;
         }
-        //把元素往下扔
-        *(first + targetIndex) = *(first + parent);
+        //把元素往上交换
+        swap(*(first + targetIndex), *(first + parent));
         //更新下标
         targetIndex = parent;
         parent = (targetIndex - 1) / 2;
     }
-
-    //这里就是value的位置
-    *(first + targetIndex) = value;
 }
 
-template <typename RandomAccessIterator, typename Distance, typename T, typename Compare>
-void h_push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, T*, Compare comp) {
-    //传入Distance*和T*的指针是为了模板参数的完成自动推导
-    h_push_heap(first, Distance(0) , Distance((last - first) - 1) , T(*(last - 1)), comp);
+template <typename RandomAccessIterator, typename Distance, typename Compare>
+void h_push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, Compare& comp) {
+    //传入Distance*的指针是为了模板参数的完成自动推导
+    h_push_heap(first, Distance(0) , Distance((last - first) - 1) , comp);
 }
 
 
@@ -128,17 +118,17 @@ void h_push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Dist
  * @param comp 给定的比较器对象
  */
 template <typename RandomAccessIterator, typename Compare>
-void push_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-    h_push_heap_aux(first, last, distance_type(first), value_type(first), comp);
+void push_heap(RandomAccessIterator first, RandomAccessIterator last, Compare& comp) {
+    h_push_heap_aux(first, last, distance_type(first), comp);
 }
 
 
-template <typename RandomAccessIterator, typename Distance, typename T>
-void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance bottomIndex, T value) {
-    //四项参数分别是，容器开头迭代器，目标（堆顶）元素所在下标，堆底元素所在下标，将被交换到堆顶的堆底元素（比较的要素齐全，不需要创建一个变量临时存储了，节约内存提高效率）
+template <typename RandomAccessIterator, typename Distance>
+void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance bottomIndex) {
+    //三项参数分别是，容器开头迭代器，目标（堆顶）元素所在下标，堆底元素所在下标
 
     //首先，将堆顶元素放到堆底，即堆顶元素出堆
-    *(first + bottomIndex) = *(first + targetIndex);
+    swap( *(first + bottomIndex), *(first + targetIndex) );
 
     //然后往下下沉，找到value的应有位置
 
@@ -155,24 +145,21 @@ void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance botto
         }
 
         //如果最大的孩子都比value小，说明这里就是value的位置
-        if( *(first + max_child) < value) {
+        if( *(first + max_child) < *(first + targetIndex)) {
             break;
         }
         //不是value的位置，就换最大的孩子到当前target位置上来
-        *(first + targetIndex) = *(first + max_child);
+        swap( *(first + max_child), *(first + targetIndex) );
         //更新位置到原最大孩子处
         targetIndex = max_child;
     }
-    //出循环的时候，targetIndex就是value应在的位置
-    *(first + targetIndex) = value;
-
 }
 
 
-template <typename RandomAccessIterator, typename Distance, typename T>
-void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, T*) {
-    //传入Distance*和T*的指针是为了模板参数的完成自动推导
-    h_pop_heap(first, Distance(0) , Distance((last - first) - 1) , T(*(last - 1)));
+template <typename RandomAccessIterator, typename Distance>
+void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*) {
+    //传入Distance*的指针是为了模板参数的完成自动推导
+    h_pop_heap(first, Distance(0) , Distance((last - first) - 1));
 }
 
 
@@ -190,13 +177,14 @@ void pop_heap(RandomAccessIterator first, RandomAccessIterator last) {
 
 
 
-template <typename RandomAccessIterator, typename Distance, typename T, typename Compare>
-void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance bottomIndex, T value, Compare comp) {
-    //四项参数分别是，容器开头迭代器，堆顶元素所在下标，目标元素所在下标，要插入的元素（比较的要素齐全，不需要创建一个变量临时存储了，节约内存提高效率）
-    //实现元素上浮
+
+template <typename RandomAccessIterator, typename Distance, typename Compare>
+void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance bottomIndex, Compare& comp) {
+    //四项参数分别是，容器开头迭代器，堆顶元素所在下标，目标元素所在下标，比较器
+    //实现元素下沉
 
     //首先，将堆顶元素放到堆底，即堆顶元素出堆
-    *(first + bottomIndex) = *(first + targetIndex);
+    swap( *(first + bottomIndex), *(first + targetIndex) );
 
     //然后往下下沉，找到value的应有位置
 
@@ -213,22 +201,21 @@ void h_pop_heap(RandomAccessIterator first, Distance targetIndex, Distance botto
         }
 
         //如果最大的孩子都比value小，说明这里就是value的位置
-        if( comp(*(first + max_child) , value) ) {
+        if( comp(*(first + max_child) , *(first + targetIndex)) ) {
             break;
         }
         //不是value的位置，就换最大的孩子到当前target位置上来
-        *(first + targetIndex) = *(first + max_child);
+        swap( *(first + max_child), *(first + targetIndex) );
         //更新位置到原最大孩子处
         targetIndex = max_child;
     }
     //出循环的时候，targetIndex就是value应在的位置
-    *(first + targetIndex) = value;
 }
 
-template <typename RandomAccessIterator, typename Distance, typename T, typename Compare>
-void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, T*, Compare comp) {
-    //传入Distance*和T*的指针是为了模板参数的完成自动推导
-    h_pop_heap(first, Distance(0) , Distance((last - first) - 1) , T(*(last - 1)), comp);
+template <typename RandomAccessIterator, typename Distance, typename Compare>
+void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, Compare& comp) {
+    //传入Distance*的指针是为了模板参数的完成自动推导
+    h_pop_heap(first, Distance(0) , Distance((last - first) - 1) ,comp);
 }
 
 
@@ -241,8 +228,8 @@ void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Dista
  * @param comp 给定的比较器对象
  */
 template <typename RandomAccessIterator, typename Compare>
-void pop_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-    h_pop_heap_aux(first, last, distance_type(first), value_type(first), comp);
+void pop_heap(RandomAccessIterator first, RandomAccessIterator last, Compare& comp) {
+    h_pop_heap_aux(first, last, distance_type(first), comp);
 }
 
 /**
@@ -270,7 +257,7 @@ void sort_heap(RandomAccessIterator first, RandomAccessIterator last){
  * @param comp 比较器
  */
 template <typename RandomAccessIterator, typename Compare>
-void sort_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+void sort_heap(RandomAccessIterator first, RandomAccessIterator last, Compare& comp){
     //在一个已经是heap的数组上完成堆排序
     //需要保证传入的迭代器first到last之间一定是heap结构
     //这样堆排序就很简单了，不断地pop_heap就可以完成升序排序了。
@@ -306,7 +293,7 @@ void make_heap(RandomAccessIterator first, RandomAccessIterator last){
  * @param comp 比较器
  */
 template <typename RandomAccessIterator, typename Compare>
-void make_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
+void make_heap(RandomAccessIterator first, RandomAccessIterator last, Compare& comp){
     //将一个数组变成堆结构
     //直接不断地入堆就行了
 

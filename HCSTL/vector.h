@@ -99,6 +99,15 @@ public:
         }
     }
 
+    vector(vector<T>&& vec) {
+        start = vec.start;
+        finish = vec.finish;
+        end_of_storage = vec.end_of_storage;
+        vec.start = nullptr;
+        vec.finish = nullptr;
+        vec.end_of_storage = nullptr;
+    }
+
     ~vector() {
         clear();
         data_allocator::deallocate(start);
@@ -141,13 +150,16 @@ public:
             allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
         }
         //直接添加到末尾即可
-        if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
-            *finish = x;    //在新的finish位置上插入元素
-        } else {
-            //在新的finish位置上构造新元素
-            construct(finish, x);
-        }
+        construct(finish, x);
 
+        ++finish;       //finish自增，指针移动
+    }
+
+    void push_back(value_type&& x) {
+        if(finish == end_of_storage) {
+            allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
+        }
+        construct(finish, move(x));
         ++finish;       //finish自增，指针移动
     }
 
