@@ -73,7 +73,7 @@ void h_push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Dist
  */
 template <typename RandomAccessIterator>
 void push_heap(RandomAccessIterator first, RandomAccessIterator last) {
-    h_push_heap_aux(first, last, distance_type(first), value_type(first));
+    h_push_heap_aux(first, last, distance_type(first));
 }
 
 
@@ -171,7 +171,7 @@ void h_pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Dista
  */
 template <typename RandomAccessIterator>
 void pop_heap(RandomAccessIterator first, RandomAccessIterator last) {
-    h_pop_heap_aux(first, last, distance_type(first), value_type(first));
+    h_pop_heap_aux(first, last, distance_type(first));
 }
 
 

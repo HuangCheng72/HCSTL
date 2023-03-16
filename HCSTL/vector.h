@@ -99,7 +99,92 @@ public:
         }
     }
 
+    vector(const vector<T>& vec) {
+        //先把之前的空间删掉
+        for(size_type i = 0; i < size(); i++){
+            if(!hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+                //如果需要就析构start + i上的对象
+                destroy(start + i);
+            }
+        }
+        //通过空间配置器回收空间
+        data_allocator::deallocate(start);
+
+        //再申请空间
+        start = data_allocator::allocate(vec.capacity());
+        finish = start + vec.size();
+        end_of_storage = start + vec.capacity();
+        for(size_type i = 0; i < vec.size(); i++){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+                //这里不能用vec[i]的原因是operator[]我没给它加上const，而这里的vec是一个常量引用，只能调动在参数列表后面加了const的保证不会修改内部的函数
+                start[i] = *(vec.begin() + i);
+            } else {
+                //在指定空间上构造对象
+                //不能用vec[i]的理由同上
+                construct(start + i, *(vec.begin() + i));
+            }
+        }
+    }
+
     vector(vector<T>&& vec) {
+        //先把之前的空间删掉
+        for(size_type i = 0; i < size(); i++){
+            if(!hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+                //如果需要就析构start + i上的对象
+                destroy(start + i);
+            }
+        }
+        //通过空间配置器回收空间
+        data_allocator::deallocate(start);
+
+        //然后直接搬运
+        start = vec.start;
+        finish = vec.finish;
+        end_of_storage = vec.end_of_storage;
+        vec.start = nullptr;
+        vec.finish = nullptr;
+        vec.end_of_storage = nullptr;
+    }
+
+    vector& operator= (const vector<T>& vec){
+        //先把之前的空间删掉
+        for(size_type i = 0; i < size(); i++){
+            if(!hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+                //如果需要就析构start + i上的对象
+                destroy(start + i);
+            }
+        }
+        //通过空间配置器回收空间
+        data_allocator::deallocate(start);
+
+        //再申请空间
+        start = data_allocator::allocate(vec.capacity());
+        finish = start + vec.size();
+        end_of_storage = start + vec.capacity();
+        for(size_type i = 0; i < vec.size(); i++){
+            if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+                //这里不能用vec[i]的原因是operator[]我没给它加上const，而这里的vec是一个常量引用，只能调动在参数列表后面加了const的保证不会修改内部的函数
+                start[i] = *(vec.begin() + i);
+            } else {
+                //在指定空间上构造对象
+                //不能用vec[i]的理由同上
+                construct(start + i, *(vec.begin() + i));
+            }
+        }
+    }
+
+    vector& operator= (vector<T>&& vec) {
+        //先把之前的空间删掉
+        for(size_type i = 0; i < size(); i++){
+            if(!hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+                //如果需要就析构start + i上的对象
+                destroy(start + i);
+            }
+        }
+        //通过空间配置器回收空间
+        data_allocator::deallocate(start);
+
+        //然后直接搬运
         start = vec.start;
         finish = vec.finish;
         end_of_storage = vec.end_of_storage;
@@ -150,7 +235,12 @@ public:
             allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
         }
         //直接添加到末尾即可
-        construct(finish, x);
+        if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+            *finish = x;    //在新的finish位置上插入元素
+        } else {
+            //在新的finish位置上构造新元素
+            construct(finish, x);
+        }
 
         ++finish;       //finish自增，指针移动
     }
@@ -159,7 +249,13 @@ public:
         if(finish == end_of_storage) {
             allocate_and_copy(capacity() * 2);  //这里采用扩容系数为2
         }
-        construct(finish, move(x));
+        //直接添加到末尾即可
+        if(hc_type_bool<typename type_traits<T>::has_trivial_copy_constructor>::value){
+            *finish = x;    //在新的finish位置上插入元素
+        } else {
+            //在新的finish位置上构造新元素
+            construct(finish, move(x));
+        }
         ++finish;       //finish自增，指针移动
     }
 

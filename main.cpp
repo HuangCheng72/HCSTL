@@ -11,8 +11,11 @@ class myclass{
 private:
     int* p;
 public:
-    myclass() : p(nullptr) {}
+    myclass() : p(nullptr) {
+        std::cout<<"default constructor  value = null"<<std::endl;
+    }
     myclass(int value) {
+        std::cout<<"parameter constructor  value = "<< value <<std::endl;
         p = new int(value);
     }
     myclass(const myclass& m)  {
@@ -25,6 +28,7 @@ public:
         m.p = nullptr;//表示所有权转移
     }
     ~myclass() {
+        std::cout<<"destructor" <<std::endl;
         delete p;
     }
     myclass& operator= (const myclass& m){
@@ -45,57 +49,33 @@ public:
 
 int main() {
 
-    //以下是测试内容和应有结果
+    vector<myclass>& vec1 = *(new vector<myclass>(4));
+    vector<myclass>& vec2 = *(new vector<myclass>(4));
 
-    struct Func {
-        void operator() (myclass& m1){
-            std::cout<< m1.getter() << std::endl;
-        }
-    };
+    std::cout<< "-----------stage1-split--------------" << std::endl;
 
-    Func& func = *(new Func);
-
-    vector<myclass>& vec = *(new vector<myclass>());
-//    vector<int>& vec = *(new vector<int>());
-
-    srand(1);
-    for(int i = 0; i < 10; i++){
-        vec.push_back( myclass(rand()) ) ;
-//        vec.push_back( rand() ) ;
+    for(int i = 1; i < 4; i++) {
+        myclass m_temp = *(new myclass(i * 100));
+        vec1.push_back(m_temp);
     }
 
-    std::cout<<"--------------end stage1-----------------"<<std::endl;
+    std::cout<< "-----------stage2-split--------------" << std::endl;
 
-    struct Comp {
-        bool operator() (const myclass& m1, const myclass& m2){
-            return m1.getter() > m2.getter();
-        }
-    };
-//    struct Comp {
-//        bool operator() (const int& m1, const int& m2){
-//            return m1 > m2;
-//        }
-//    };
-    Comp& comp = *(new Comp());
+    for(int i = 1; i < 4; i++) {
+        vec2.push_back(myclass(i * 100 + 1000));
+    }
 
-    make_heap(vec.begin(), vec.end(), comp);
+    vector<myclass> vec3(vec2);
+    vector<myclass> vec4(move(vec2));
+    vector<myclass> vec5 = vec3;
+    vector<myclass> vec6 = move(vec4);
 
-    std::cout<<"--------------end stage2-----------------"<<std::endl;
+    std::cout<< vec3.size() <<std::endl;
+    std::cout<< vec4.size() <<std::endl;
+    std::cout<< vec5.size() <<std::endl;
+    std::cout<< vec6.size() <<std::endl;
 
-    sort_heap(vec.begin(), vec.end(), comp);
-
-    std::cout<<"--------------end stage3-----------------"<<std::endl;
-
-//    struct Func {
-//        void operator() (int& m1){
-//            std::cout<< m1 << std::endl;
-//        }
-//    };
-//
-//    Func& func = *(new Func);
-
-
-    for_each(vec.begin(), vec.end(), func);
+    std::cout<< "-----------stage3-split--------------" << std::endl;
 
     return 0;
 }

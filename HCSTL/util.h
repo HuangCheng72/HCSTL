@@ -68,9 +68,21 @@ typename remove_reference<T>::type&& move(T&& t) {
 template<typename T>
 void swap(T& a, T& b) {
     //调用移动构造器完成内部资源的交换。
-    T temp(move(a));
+    T temp = move(a);
     a = move(b);
     b = move(temp);
+}
+
+template<typename T>
+T&& forward( typename remove_reference<T>::type& ref){
+    //ref为左值引用的时候，根据引用折叠必定转发为左值引用
+    return (T&&)ref;
+}
+
+template<typename T>
+T&& forward( typename remove_reference<T>::type&& ref){
+    //ref为右值引用的时候，根据引用折叠必定转发为右值引用
+    return (T&&)ref;
 }
 
 #endif //HCSTL_UTIL_H
