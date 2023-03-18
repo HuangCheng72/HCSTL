@@ -6,6 +6,7 @@
 #include "algorithm.h"
 #include "vector.h"
 #include "queue.h"
+#include "stack.h"
 
 #include "deque.h"
 
@@ -52,20 +53,18 @@ public:
 
 int main() {
 
-    priority_queue<int>& pq = *(new priority_queue<int>());
+    stack<int>& q = *(new stack<int>());
 
-    srand(1);
     for(int i = 0; i < 10; i++) {
-        int temp = rand();
-        pq.push(temp);
+        q.push(i);
     }
 
-    while(!pq.empty()){
-        std::cout << pq.top() << std::endl;
-        pq.pop();
+    while(!q.empty()) {
+        std::cout << q.top() << std::endl;
+        q.pop();
     }
 
-    delete &pq;
+    delete &q;
 
     return 0;
 }

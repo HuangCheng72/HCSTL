@@ -283,7 +283,7 @@ public:
         return start;
     }
     iterator end() const {
-        return finish;
+        return finish - 1;
     }
 
     /*-------迭代器相关函数完--------*/
