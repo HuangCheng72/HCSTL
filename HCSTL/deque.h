@@ -13,15 +13,16 @@
 
 //官方实现的STL deque，要可以自行指定缓冲区的长度
 //这里只是做一个Demo，暂时只管实现就行了。
-//我在这里默认每个buffer长度为4（现实中一般是512）
+//我在这里默认每个buffer长度为16（现实中一般是512）
 //这本来应该是一个计算的函数，我这里简化一下，直接变成一个常数了
-#define buffer_size 2
+#define buffer_size 16
 
 //内部实现的迭代器，对外暴露的迭代器要再次包装才可以
 template<typename T>
 struct deque_iterator{
 
     //没有继承iterator结构体，所以要自行把这些嵌套定义写下来
+    //因为也要可以迭代器萃取
 
     typedef random_access_iterator_tag iterator_category;
     typedef T value_type;
@@ -30,7 +31,7 @@ struct deque_iterator{
     typedef T& reference;
 
     //与deque保持一致
-    typedef pointer* map_pointer;
+    typedef pointer* map_pointer; //之所以不能继承iterator结构体是因为继承了的话，这里没法用pointer*，总提示用不了（可能换using可以吧）
     typedef deque_iterator<T> self;
 
     //保存四个信息
@@ -306,6 +307,7 @@ public:
     }
 
     ~deque() {
+        //清理全部元素
         clear();
         for(int i = 0; i < map_size; i++) {
             //移动之后原来空间也就剩个空壳了，直接回收就行了
@@ -344,7 +346,6 @@ public:
         //默认该位置上有元素，所以要先判断是否需要扩容
         if(start.node == map && start.cur == start.first) {
             //需要扩容了
-            std::cout<<"Dilatation. Front."<<std::endl;
             Dilatation_Map_And_Nodes_aux();
         }
         //无需扩容的话，直接在新位置构造（该位置上有元素，所以要先移动迭代器）
@@ -357,7 +358,6 @@ public:
         //默认该位置上有元素，所以要先判断是否需要扩容
         if(start.node == map && start.cur == start.first) {
             //需要扩容了
-            std::cout<<"Dilatation. Front."<<std::endl;
             Dilatation_Map_And_Nodes_aux();
         }
         //无需扩容的话，直接在新位置构造（该位置上有元素，所以要先移动迭代器）
@@ -371,7 +371,6 @@ public:
         construct(finish.cur, x);
         //构造完成之后，应当判断是否还有空位，如果没有空位了，就应该扩容
         if(finish.node == map + map_size - 1 && finish.cur == finish.last - 1) {
-            std::cout<<"Dilatation. Back."<<std::endl;
             Dilatation_Map_And_Nodes_aux();
         }
         //不管是否扩容，都要移动迭代器
@@ -384,7 +383,6 @@ public:
         construct(finish.cur, move(x));
         //构造完成之后，应当判断是否还有空位，如果没有空位了，就应该扩容
         if(finish.node == map + map_size - 1 && finish.cur == finish.last - 1) {
-            std::cout<<"Dilatation. Back."<<std::endl;
             Dilatation_Map_And_Nodes_aux();
         }
         //不管是否扩容，都要移动迭代器

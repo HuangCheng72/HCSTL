@@ -5,6 +5,7 @@
 #include "heap.h"
 #include "algorithm.h"
 #include "vector.h"
+#include "queue.h"
 
 #include "deque.h"
 
@@ -51,35 +52,20 @@ public:
 
 int main() {
 
-    deque<myclass>& dq = *(new deque<myclass>());
-    for(int i = 1; i < 4; i++) {
-        dq.push_front(myclass(i * 100));
+    priority_queue<int>& pq = *(new priority_queue<int>());
+
+    srand(1);
+    for(int i = 0; i < 10; i++) {
+        int temp = rand();
+        pq.push(temp);
     }
 
-    for(int i = 1; i < 5; i++) {
-        dq.push_back(myclass(i * 1000));
+    while(!pq.empty()){
+        std::cout << pq.top() << std::endl;
+        pq.pop();
     }
 
-    std::cout<< "size = " << dq.size() <<std::endl;
-
-    struct Func {
-        void operator() (myclass& m){
-            std::cout<< m.getter() <<std::endl;
-        }
-    };
-    Func func;
-    for_each(dq.begin(), dq.end(), func);
-
-    dq.erase(dq.begin() + 7);
-    std::cout<< "size = " << dq.size() <<std::endl;
-
-    for_each(dq.begin(), dq.end(), func);
-
-    dq.erase(dq.begin() + 1, dq.end() - 2);
-
-    for_each(dq.begin(), dq.end(), func);
-
-    std::cout<< "size = " << dq.size() <<std::endl;
+    delete &pq;
 
     return 0;
 }

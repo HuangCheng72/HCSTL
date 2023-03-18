@@ -15,29 +15,29 @@
 //注意，在这里你是接触不到容器内的指针，你只能接触到迭代器。
 //优先队列并不提供迭代器，它只能访问堆最顶端的值。
 
-#include "vector.h"
+#include "deque.h"
 #include "functional.h"
 #include "heap.h"
 
 //函数无法作为模板参数，但是结构体名可以，所以比较器这个模板参数默认值应当采用函数对象，在之前我们在算法for_each中提供的是函数对象也是一样的道理，所以要将比较函数变成函数对象
-template <typename T, typename Compare = less<T>>
+template <typename T, typename Compare = less<T>, typename Container = deque<T> >
 class priority_queue{
 public:
 
     typedef Compare value_compare;
 
     //使用底层容器的类型，这是适配器的一个特点，依赖于原组件提供的信息
-    typedef typename vector<T>::value_type value_type;
-    typedef typename vector<T>::size_type size_type;
-    typedef typename vector<T>::reference reference;
-    typedef typename vector<T>::const_reference const_reference;
+    typedef typename Container::value_type value_type;
+    typedef typename Container::size_type size_type;
+    typedef typename Container::reference reference;
+    typedef typename Container::const_reference const_reference;
 
-    typedef typename vector<T>::iterator iterator;
+    typedef typename Container::iterator iterator;
 
 private:
 
     //底层容器对象
-    vector<T> cont;
+    Container cont;
     //指针距离计算结果类型
     typedef typename iterator_traits<iterator>::difference_type Distance;
     //比较器
@@ -48,15 +48,9 @@ public:
 
     /*-------构造器与析构器相关函数--------*/
 
-    priority_queue() {
-        //vector的默认构造器直接把三个指针全部设置为nullptr，所以应当指定初始大小。
-        cont = *(new vector<T>());
-        comp = *(new value_compare());
-    }
+    priority_queue() = default;
 
-    ~priority_queue() {
-        delete cont;
-    }
+    ~priority_queue() = default;
 
     /*-------构造器与析构器相关函数完--------*/
 
