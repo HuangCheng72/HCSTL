@@ -283,7 +283,7 @@ public:
         return start;
     }
     iterator end() const {
-        return finish - 1;
+        return finish;
     }
 
     /*-------迭代器相关函数完--------*/
@@ -338,7 +338,7 @@ public:
     }
 
     reference back() const {
-        return *end();
+        return *(end() - 1 );
     }
 
     void push_front(const_reference x) {
